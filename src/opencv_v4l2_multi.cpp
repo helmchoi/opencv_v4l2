@@ -23,6 +23,41 @@ unsigned int GetTickCount()
         return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
 
+void init_cam(int width, int height) {
+	const char *videodev0, *videodev1, *videodev2, *videodev3, *videodev4, *videodev5;
+	videodev0 = "/dev/video0";
+	videodev1 = "/dev/video1";
+	videodev2 = "/dev/video2";
+	videodev3 = "/dev/video3";
+	videodev4 = "/dev/video4";
+	videodev5 = "/dev/video5";
+
+	if (helper_init_cam(videodev0, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video0 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+	if (helper_init_cam(videodev1, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video1 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+	if (helper_init_cam(videodev2, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video2 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+	if (helper_init_cam(videodev3, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video3 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+	if (helper_init_cam(videodev4, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video4 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+	if (helper_init_cam(videodev5, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
+		cout << "video5 not initialized properly" << endl;
+		return EXIT_FAILURE;
+	}
+}
+
 /*
  * Other formats: To use pixel formats other than UYVY, see related comments (comments with
  * prefix 'Other formats') in corresponding places.
@@ -30,30 +65,18 @@ unsigned int GetTickCount()
 int main(int argc, char **argv)
 {
 	unsigned int width, height;
-	static const char* default_videodev = "/dev/video0";
-	const char *videodev;
 	unsigned int start, end, fps = 0;
 	unsigned char* ptr_cam_frame;
 	int bytes_used;
 
-	/*
-	 * Re-using the frame matrix(ces) instead of creating new ones (i.e., declaring 'Mat frame'
-	 * (and cuda::GpuMat gpu_frame) outside the 'while (1)' loop instead of declaring it
-	 * within the loop) improves the performance for higher resolutions.
-	 */
 	Mat yuyv_frame, preview;
 #if defined(ENABLE_DISPLAY) && defined(ENABLE_GL_DISPLAY) && defined(ENABLE_GPU_UPLOAD)
 	cuda::GpuMat gpu_frame;
 #endif
 
-	if (argc == 4) {
-		videodev = argv[1];
-
-		/*
-		 * Courtesy: https://stackoverflow.com/a/2797823
-		 */
-		string width_str = argv[2];
-		string height_str = argv[3];
+	if (argc == 3) {
+		string width_str = argv[1];
+		string height_str = argv[2];
 		try {
 			size_t pos;
 			width = stoi(width_str, &pos);
@@ -75,29 +98,13 @@ int main(int argc, char **argv)
 	} else {
 		cout << "Note: This program accepts (only) three arguments.\n";
 		cout << "First arg: device file path, Second arg: width, Third arg: height\n";
-		cout << "No arguments given. Assuming default values.\n";
-		cout << "Device file path: " << default_videodev << "; Width: 640; Height: 480\n";
-		videodev = default_videodev;
+		cout << "No arguments given. Assuming default values. Width: 640; Height: 480\n";
 		width = 640;
 		height = 480;
 	}
-
-	/*
-	 * Helper function to initialize camera to a specific resolution and format
-	 *
-	 * 1. Using User pointer method of streaming I/O contributes to increased performance as
-	 *    it avoids a spurious copy from kernel space to user space which happens in case of
-	 *    the Memory mapping streaming I/O method.
-	 *
-	 * 2. Other formats: To use formats other that UYVY, the 4th parameter for this function
-	 *    must be modified accordingly to pass a valid value for the 'pixelformat' member of
-	 *    'struct v4l2_pix_format'[1].
-	 *
-	 * [1]: https://linuxtv.org/downloads/v4l-dvb-apis/uapi/v4l/pixfmt-v4l2.html#c.v4l2_pix_format
-	 */
-	if (helper_init_cam(videodev, width, height, V4L2_PIX_FMT_UYVY, IO_METHOD_USERPTR) < 0) {
-		return EXIT_FAILURE;
-	}
+	
+	init_cam(width, height);
+	cout << "Initialized Cameras 0~5" << endl;
 
 #ifdef ENABLE_DISPLAY
 	/*

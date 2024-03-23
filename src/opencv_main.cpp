@@ -23,9 +23,11 @@ unsigned int GetTickCount()
 
 int main(int argc, char **argv)
 {
+	int camera_idx = stoi(argv[1]);
 	unsigned int width, height;
 	unsigned int start, end , fps = 0;
-	VideoCapture cap(0 + CAP_V4L2); // open the default camera with V4L2 backend
+	VideoCapture cap(camera_idx); // open the default camera with V4L2 backend
+	cout << "VideoCapture declared - camera #" << camera_idx << endl;
 
 	/*
 	 * Re-using the frame matrix(ces) instead of creating new ones (i.e., declaring 'Mat frame'
@@ -37,13 +39,14 @@ int main(int argc, char **argv)
 	cuda::GpuMat gpu_frame;
 	#endif
 
-	if (argc == 3)
+	if (argc == 4)
 	{
+		cout << "[Specified width/height]" << endl;
 		/*
 		 * Courtesy: https://stackoverflow.com/a/2797823
 		 */
-		string width_str = argv[1];
-		string height_str = argv[2];
+		string width_str = argv[2];
+		string height_str = argv[3];
 		try {
 			size_t pos;
 			width = stoi(width_str, &pos);
@@ -62,6 +65,7 @@ int main(int argc, char **argv)
 			cerr << "Width or Height out of range\n";
 			return EXIT_FAILURE;
 		}
+		cout << "width: " << width << ", height: " << height << endl;
 	}
 	else
 	{
@@ -73,9 +77,9 @@ int main(int argc, char **argv)
 
 	if(!cap.isOpened())  // check if we succeeded
 		return EXIT_FAILURE;
-	cap.set(CV_CAP_PROP_FRAME_WIDTH, width);
-	cap.set(CV_CAP_PROP_FRAME_HEIGHT, height);
-	cout << "Current resolution: Width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << " Height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << '\n';
+	cap.set(CAP_PROP_FRAME_WIDTH, width);
+	cap.set(CAP_PROP_FRAME_HEIGHT, height);
+	cout << "Current resolution: Width: " << cap.get(CAP_PROP_FRAME_WIDTH) << " Height: " << cap.get(CAP_PROP_FRAME_HEIGHT) << '\n';
 
 #ifdef ENABLE_DISPLAY
 	/*
@@ -83,7 +87,7 @@ int main(int argc, char **argv)
 	 * a lot. It is essential for achieving better performance.
 	 */
 	#ifdef ENABLE_GL_DISPLAY
-	namedWindow("preview", CV_WINDOW_OPENGL);
+	namedWindow("preview", 4096);
 	#else
 	namedWindow("preview");
 	#endif

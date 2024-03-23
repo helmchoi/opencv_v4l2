@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project ("OpenCV V4L2")
+project ("OpenCV_V4L2")
 
 set (V4L2_SOURCE "src/opencv_v4l2.cpp")
 set (MAIN_SOURCE "src/opencv_main.cpp")
@@ -20,6 +20,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # Include the directories containing libraries
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/lib")
 add_subdirectory (lib)
 

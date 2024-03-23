@@ -51,11 +51,13 @@ The above commands would generate multiple binaries with different characteristi
    frames but doesn't render the frames on display. It just prints the framerate achieved.
 
     The application can be killed by pressing Ctrl+C.
+    Usage: opencv-main 0 1280 720    <-- open /dev/video0
 
 2. `opencv-main-display`: This application is similar to `opencv-main` with the only addition that
    it uses `imshow` to display the camera stream in a window.
 
     This application can be killed by pressing the ESC key with the display window in focus.
+    Usage: opencv-main 0 1280 720    <-- open /dev/video0
 
 3. `opencv-main-gl-display`: This application is similar to `opencv-main-display` with the only addition that
    it uses an OpenGL rendered window to display the camera stream.
@@ -72,11 +74,13 @@ The above commands would generate multiple binaries with different characteristi
    prints the framerate achieved.
 
     This application can be killed by pressing Ctrl+C.
+    Usage: opencv-main /dev/video0 1280 720    <-- open /dev/video0
 
 6. `opencv-v4l2-display`: This application is similar to `opencv-v4l2` with the only addition that
    it uses `imshow` to display the camera stream in a window.
 
     This application can be killed by pressing the ESC key with the display window in focus.
+    Usage: opencv-main /dev/video0 1280 720    <-- open /dev/video0
 
 7. `opencv-v4l2-gl-display`: This application is similar to `opencv-v4l2-display` with the only addition that
    it uses an OpenGL rendered window to display the camera stream.

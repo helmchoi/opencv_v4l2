@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "istream": "cpp",
+        "functional": "cpp",
+        "utility": "cpp",
+        "memory": "cpp",
+        "tuple": "cpp",
+        "fcntl.h": "c"
+    }
+}
