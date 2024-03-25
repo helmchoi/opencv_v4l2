@@ -47,11 +47,28 @@ sudo make install
 ## Generated Applications
 The above commands would generate multiple binaries with different characteristics as specified below:
 
+--------------------------------------------------------------------------------------------
+#### Multi-camera custom implementation
+00. `opencv-v4l2-multi`: This application uses V4L2 to grab frames from the cameras and encapsulate them in
+   OpenCV Mats. This data is then explicitly colorspace converted using `cvtColor`. The application only
+   prints the framerate achieved. Each camera runs in a separate thread.
+
+    This application can be killed by pressing Ctrl+C.
+    Usage: opencv-v4l2-multi {#cameras} width height
+
+01. `opencv-v4l2-multi-display`: This application is similar to `opencv-v4l2-multi` with the only addition that
+   it uses `imshow` to display the camera stream in a window.
+   But currently `imwrite` is implemented, not `imshow`.
+
+    This application can be killed by pressing the ESC key with the display window in focus.
+    Usage: opencv-v4l2-multi-display {#cameras} width height
+--------------------------------------------------------------------------------------------
+
 1. `opencv-main`: This application uses the VideoCapture API of OpenCV to fetch
    frames but doesn't render the frames on display. It just prints the framerate achieved.
 
     The application can be killed by pressing Ctrl+C.
-    Usage: opencv-main 0 1280 720    <-- open /dev/video0
+    Usage: opencv-main 0 1280 720    <-- open /dev/video0 (default width=640, height=360)
 
 2. `opencv-main-display`: This application is similar to `opencv-main` with the only addition that
    it uses `imshow` to display the camera stream in a window.

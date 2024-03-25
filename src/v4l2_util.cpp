@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+// #include <string.h>
+#include <iostream>
 
 #include <fcntl.h>              /* low-level i/o */
 #include <unistd.h>
@@ -18,10 +19,14 @@
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 //=====================================================
-struct buffer {
-	void   *start;
-	size_t  length;
-};
+
+unsigned int GetTickCount() {
+    struct timeval tv;
+    if(gettimeofday(&tv, NULL) != 0)
+            return 0;
+
+    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
 
 int CamV4L2::xioctl(int fh, unsigned long request, void *arg) {
 	int r;
@@ -459,9 +464,13 @@ int CamV4L2::close_device(void) {
 	return 0;
 }
 
-int CamV4L2::helper_init_cam(const char* devname, 
+int CamV4L2::helper_init_cam(int idx, const char* devname, 
     unsigned int width, unsigned int height, 
-    unsigned int format, enum io_method io_meth) {
+    unsigned int format, enum io_method io_meth, bool enable_display_) {
+	
+	camidx = idx;
+	enable_display = enable_display_;
+	running = false;
     if (is_initialised)
 	{
 		/*
@@ -473,6 +482,7 @@ int CamV4L2::helper_init_cam(const char* devname,
 		return ERR;
 	}
 
+	std::cout << "--- Camera #" << camidx << "(" << devname << ") ---------------" << std::endl;
 	if(
 		set_io_method(io_meth) < 0 ||
 		open_device(devname) < 0 ||
@@ -482,6 +492,16 @@ int CamV4L2::helper_init_cam(const char* devname,
 	{
 		fprintf(stderr, "Error occurred when initialising camera\n");
 		return ERR;
+	}
+
+	yuyv_frame = cv::Mat(height, width, CV_8UC2);
+
+	if (enable_display) {
+		std::string savepath_ = "../log/";
+		savepath = savepath_.append(std::to_string(camidx)).append("/");
+	// 	std::string winname_ = "camera #";
+	// 	winname = winname_.append(std::to_string(camidx));
+	// 	cv::namedWindow(winname);
 	}
 
 	is_initialised = 1;
@@ -559,6 +579,71 @@ int CamV4L2::helper_get_cam_frame(
 	}
 
 	is_released = 0;
+	return 0;
+}
+
+void CamV4L2::start_thread() {
+	runner = std::thread(&CamV4L2::run_thread, this);
+}
+
+void CamV4L2::stop_thread() {
+	running = false;
+	runner.join();
+}
+
+int CamV4L2::run_thread() {
+	std::cout << "start thread #" << camidx << std::endl;
+	start = GetTickCount();
+	while (running) {
+		if (helper_get_cam_frame(&ptr_cam_frame, &bytes_used) < 0) {
+			return -1;
+			break;
+		}
+
+		/*
+			* It's easy to re-use the matrix for our case (V4L2 user pointer) by changing the
+			* member 'data' to point to the data obtained from the V4L2 helper.
+			*/
+		yuyv_frame.data = ptr_cam_frame;
+		if (yuyv_frame.empty()) {
+			std::cout << "cam #" << camidx << ": Img load failed" << std::endl;
+			return -1;
+			break;
+		}
+
+		/*
+			* 1. We do not use the cv::cuda::cvtColor (along with cv::cuda::GpuMat matrices) for color
+			*    space conversion as cv::cuda::cvtColor does not support color space conversion from
+			*    UYVY to BGR (at least in OpenCV 3.3.1 and OpenCV 3.4.2).
+			*
+			*    The performance might differ for higher resolutions if it did support the color
+			*    conversion.
+			*
+			* 2. Other formats: To use formats other than UYVY, the third parameter of cv::cvtColor must
+			*    be modified to the corresponding color converison code[3].
+			*
+			* [3]: https://docs.opencv.org/3.4.2/d7/d1b/group__imgproc__misc.html#ga4e0972be5de079fed4e3a10e24ef5ef0
+			*/
+		cv::cvtColor(yuyv_frame, preview, cv::COLOR_YUV2BGR_UYVY);
+		if (enable_display) {
+			// cv::imshow(winname, preview);
+			// cv::waitKey(1);
+			cv::imwrite(savepath + std::to_string(savecnt) + ".png", preview);
+			savecnt++;
+		}
+		
+		if (helper_release_cam_frame() < 0) {
+			break;
+		}
+
+		fps++;
+		end = GetTickCount();
+		if ((end - start) >= 1000) {
+			std::cout << "cam #" << camidx << " - fps = " << fps << std::endl ;
+			fps = 0;
+			start = end;
+		}
+	}
 	return 0;
 }
 

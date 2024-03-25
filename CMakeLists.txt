@@ -5,6 +5,8 @@ project ("OpenCV_V4L2")
 set (V4L2_SOURCE "src/opencv_v4l2.cpp")
 set (MAIN_SOURCE "src/opencv_main.cpp")
 set (INFO_SOURCE "src/opencv_buildinfo.cpp")
+set (V4L2_MULTI_SOURCE "src/opencv_v4l2_multi.cpp")
+set (V4L2_UTIL "src/v4l2_util.cpp")
 
 set (OPENCV_V4L2_BIN "opencv-v4l2")
 set (OPENCV_V4L2_DISPLAY_BIN "opencv-v4l2-display")
@@ -15,6 +17,8 @@ set (OPENCV_MAIN_DISPLAY_BIN "opencv-main-display")
 set (OPENCV_MAIN_GL_DISPLAY_BIN "opencv-main-gl-display")
 set (OPENCV_MAIN_GPU_DISPLAY_BIN "opencv-main-gpu-display")
 set (OPENCV_BUILDINFO_BIN "opencv-buildinfo")
+set (OPENCV_V4L2_MULTI_BIN "opencv-v4l2-multi")
+set (OPENCV_V4L2_MULTI_DISPLAY_BIN "opencv-v4l2-multi-display")
 
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
@@ -27,6 +31,7 @@ add_subdirectory (lib)
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${V4L2_HELPER_LIB_INSTALL_PATH}")
 
 # Specify the compiler flags
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set (GCC_COMPILE_FLAGS -Wall -Wpedantic -Wextra -O3 -Wshadow -std=c++11 -g)
 add_compile_options (${GCC_COMPILE_FLAGS})
 
@@ -71,6 +76,13 @@ target_link_libraries (${OPENCV_MAIN_GPU_DISPLAY_BIN} ${OpenCV_LIBS})
 add_executable (${OPENCV_BUILDINFO_BIN} ${INFO_SOURCE})
 target_link_libraries (${OPENCV_BUILDINFO_BIN} ${OpenCV_LIBS})
 
+add_executable (${OPENCV_V4L2_MULTI_BIN} ${V4L2_MULTI_SOURCE} ${V4L2_UTIL})
+target_link_libraries (${OPENCV_V4L2_MULTI_BIN} ${OpenCV_LIBS})
+
+add_executable (${OPENCV_V4L2_MULTI_DISPLAY_BIN} ${V4L2_MULTI_SOURCE} ${V4L2_UTIL})
+target_compile_definitions (${OPENCV_V4L2_MULTI_DISPLAY_BIN} PUBLIC ENABLE_DISPLAY)
+target_link_libraries (${OPENCV_V4L2_MULTI_DISPLAY_BIN} ${OpenCV_LIBS})
+
 install (
 	TARGETS
 	${OPENCV_V4L2_BIN}
@@ -81,6 +93,8 @@ install (
 	${OPENCV_MAIN_DISPLAY_BIN}
 	${OPENCV_MAIN_GL_DISPLAY_BIN}
 	${OPENCV_MAIN_GPU_DISPLAY_BIN}
+	${OPENCV_V4L2_MULTI_BIN}
+	${OPENCV_V4L2_MULTI_DISPLAY_BIN}
 	RUNTIME DESTINATION bin
 )
 

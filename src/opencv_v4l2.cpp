@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 		 * It's easy to re-use the matrix for our case (V4L2 user pointer) by changing the
 		 * member 'data' to point to the data obtained from the V4L2 helper.
 		 */
+		cout << "bytes used = " << bytes_used << endl;
 		yuyv_frame.data = ptr_cam_frame;
 		if(yuyv_frame.empty()) {
 			cout << "Img load failed" << endl;
