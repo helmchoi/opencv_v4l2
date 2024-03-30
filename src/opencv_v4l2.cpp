@@ -126,6 +126,7 @@ int main(int argc, char **argv)
 	 *
 	 * [2]: https://docs.opencv.org/3.4.2/d3/d63/classcv_1_1Mat.html#a2ec3402f7d165ca34c7fd6e8498a62ca
 	 */
+	int savecnt = 0;
 	yuyv_frame = Mat(height, width, CV_8UC2);
 	start = GetTickCount();
 	while(1) {
@@ -140,7 +141,6 @@ int main(int argc, char **argv)
 		 * It's easy to re-use the matrix for our case (V4L2 user pointer) by changing the
 		 * member 'data' to point to the data obtained from the V4L2 helper.
 		 */
-		cout << "bytes used = " << bytes_used << endl;
 		yuyv_frame.data = ptr_cam_frame;
 		if(yuyv_frame.empty()) {
 			cout << "Img load failed" << endl;
@@ -161,6 +161,12 @@ int main(int argc, char **argv)
 		 * [3]: https://docs.opencv.org/3.4.2/d7/d1b/group__imgproc__misc.html#ga4e0972be5de079fed4e3a10e24ef5ef0
 		 */
 		cvtColor(yuyv_frame, preview, COLOR_YUV2BGR_UYVY);
+		
+		if (savecnt % 300 == 0) {
+			std::string savepath = "../log/0/";
+			imwrite(savepath + std::to_string(savecnt / 300) + ".png", preview);
+		}
+		savecnt++;
 
 #ifdef ENABLE_DISPLAY
 	/*
